@@ -51,7 +51,6 @@ class ControllerTests {
     fun `POST is not safe and not idempotent`() {
 
         // SETUP
-
         val employee = slot<Employee>()
         every {
             employeeRepository.save(capture(employee))
@@ -86,22 +85,17 @@ class ControllerTests {
                 json(MANAGER_RESPONSE_BODY("Mary", 2))
             }
         }
-
-        // VERIFY
-
     }
 
     @Test
     fun `GET is safe and idempotent`() {
 
         // SETUP
-
         every {
             employeeRepository.findById(1)
         } answers {
             Optional.of(Employee("Mary", "Manager", 1))
         }
-
         every {
             employeeRepository.findById(2)
         } answers {
@@ -129,7 +123,10 @@ class ControllerTests {
         }
 
         // VERIFY
-
+        verify(exactly = 0) {
+            employeeRepository.save(any())
+            employeeRepository.deleteById(any())
+        }
     }
 
     @Test
@@ -189,7 +186,6 @@ class ControllerTests {
     fun `DELETE is idempotent but not safe`() {
 
         // SETUP
-
         every {
             employeeRepository.findById(1)
         } answers {
@@ -197,7 +193,6 @@ class ControllerTests {
         } andThenAnswer {
             Optional.empty()
         }
-
         justRun {
             employeeRepository.deleteById(1)
         }
@@ -211,6 +206,11 @@ class ControllerTests {
         }
 
         // VERIFY
-
+        verify(exactly = 2) {
+            employeeRepository.findById(1)
+        }
+        verify(exactly = 1) {
+            employeeRepository.deleteById(1)
+        }
     }
 }
